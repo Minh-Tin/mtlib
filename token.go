@@ -3,11 +3,11 @@ package mt
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/Minh-Tin/mtlib/abi/ERC20"
+	"github.com/Minh-Tin/mtlib/abi/Erc20Bytes32"
+	"github.com/Minh-Tin/mtlib/helper"
 	"github.com/ethereum/go-ethereum/common"
 	"math/big"
-	"mtlib/abi/ERC20"
-	"mtlib/abi/Erc20Bytes32"
-	"mtlib/helper"
 )
 
 type Token struct {

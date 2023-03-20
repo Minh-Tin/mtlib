@@ -1,4 +1,4 @@
-module mtlib
+module github.com/Minh-Tin/mtlib
 
 go 1.20
 

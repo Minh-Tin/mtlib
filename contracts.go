@@ -1,8 +1,8 @@
 package mt
 
 import (
+	"github.com/Minh-Tin/mtlib/abi/OneInchSpotPrice"
 	"github.com/ethereum/go-ethereum/common"
-	"mtlib/abi/OneInchSpotPrice"
 )
 
 var (
