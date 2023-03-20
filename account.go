@@ -17,7 +17,7 @@ type Account struct {
 	PublicKey  common.Address
 	PrivateKey *ecdsa.PrivateKey
 	StoredTxs  map[uint64]*types.Transaction
-	mux        sync.Mutex
+	mux        sync.RWMutex
 }
 
 func GenKeyStore(key *ecdsa.PrivateKey, randomPwdFirst, randomPwdSecond string) ([]byte, error) {
@@ -65,10 +65,14 @@ func (acc *Account) StoreTx(tx *types.Transaction) {
 }
 
 func (acc *Account) GetTxAtNonce(nonce uint64) *types.Transaction {
-	acc.mux.Lock()
-	defer acc.mux.Unlock()
+	acc.mux.RLock()
+	defer acc.mux.RUnlock()
 	if tx, ok := acc.StoredTxs[nonce]; ok {
 		return tx
 	}
 	return nil
+}
+
+func (acc *Account) GetPendingTxs() (map[string]map[string]*types.Transaction, error) {
+	return ContentFrom(acc.PublicKey)
 }
