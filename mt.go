@@ -23,6 +23,7 @@ var (
 
 func Setup(RpcEndpoint string) error {
 	var err error
+	Ctx = context.Background()
 	R, err = rpc.DialContext(Ctx, RpcEndpoint)
 	if err != nil {
 		return err

@@ -5,11 +5,11 @@ import (
 )
 
 func Amount2Human(amount, decimal *big.Int) *big.Float {
-	decimapExp := new(big.Int).Exp(big.NewInt(10), decimal, nil)
-	if decimapExp.Cmp(big.NewInt(0)) == 0 {
+	decimalExp := new(big.Int).Exp(big.NewInt(10), decimal, nil)
+	if decimalExp.Cmp(big.NewInt(0)) == 0 {
 		return big.NewFloat(0)
 	}
-	return new(big.Float).Quo(new(big.Float).SetInt(amount), new(big.Float).SetInt(decimapExp))
+	return new(big.Float).Quo(new(big.Float).SetInt(amount), new(big.Float).SetInt(decimalExp))
 }
 
 func CalcPrice(baseAmount, quoteAmount, baseDecimal, quoteDecimal *big.Int) *big.Float {
