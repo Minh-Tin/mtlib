@@ -10,7 +10,6 @@ import (
 	"github.com/Minh-Tin/mtlib/helper"
 	"github.com/Minh-Tin/mtlib/swap"
 	"github.com/cockroachdb/errors"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/orcaman/concurrent-map/v2"
@@ -126,7 +125,6 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 				if err != nil {
 					return errors.Wrap(err, "failed to decode V3_SWAP_EXACT_IN")
 				}
-				spew.Dump("V3_SWAP_EXACT_IN", res)
 				input := res.(map[string]interface{})
 				inputBytes := input["path"].([]byte)
 				hops, err := getHopsFromMultiSwapPath(inputBytes, false)
@@ -171,7 +169,6 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 				if err != nil {
 					return errors.Wrap(err, "failed to decode V2_SWAP_EXACT_IN")
 				}
-				spew.Dump(res)
 				input := res.(map[string]interface{})
 				path := input["path"].([]ethgo.Address)
 
@@ -222,7 +219,6 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 					return errors.Wrap(err, "failed to decode UNWRAP_ETH")
 				}
 				input := res.(map[string]interface{})
-				spew.Dump(input)
 				sp.Recipient = swap.InputRecipient(common.HexToAddress(input["recipient"].(ethgo.Address).String()), sp.Sender)
 			}
 		}
@@ -444,8 +440,8 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			return err
 		}
 	case "refundETH", "selfPermit", "selfPermitAllowed", "pull", "mint":
-	case "sweepTokenWithFee0":
-		if !helper.IsSet(sp.Recipient) {
+	case "sweepTokenWithFee", "sweepTokenWithFee0":
+		if !swap.IsValidRecipient(sp.Recipient) {
 			sp.Recipient = iArgs["recipient"].(common.Address)
 		}
 		if !helper.IsSet(sp.RxToken) {
@@ -454,7 +450,7 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 	case "sweepToken0":
 	case "sweepToken":
 		if helper.IsSet(sp.RxToken) {
-			if !helper.IsSet(sp.Recipient) {
+			if !swap.IsValidRecipient(sp.Recipient) {
 				sp.Recipient = iArgs["recipient"].(common.Address)
 			}
 			if !helper.IsSet(sp.RxToken) {
@@ -489,7 +485,7 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			}
 			if err = sp.PopulateTradeMethodParams(
 				swap.OneInchUnoSwap,
-				addZero,
+				sp.Sender,
 				path[0], path[len(path)-1],
 				iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 				return err
@@ -518,7 +514,7 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 		}
 		if err = sp.PopulateTradeMethodParams(
 			swap.OneInchUniswapV3Swap,
-			addZero,
+			sp.Sender,
 			path[0], path[len(path)-1],
 			iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 			return err
@@ -548,7 +544,7 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 		}))
 		if err = sp.PopulateTradeMethodParams(
 			swap.OneInchFillOrderRFQCompact,
-			addZero,
+			params.Maker,
 			params.MakerAsset, params.TakerAsset,
 			params.MakingAmount, params.TakingAmount); err != nil {
 			return err

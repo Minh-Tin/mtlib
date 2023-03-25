@@ -5,7 +5,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"log"
 	"math/big"
 )
 
@@ -31,7 +30,9 @@ type Params struct {
 }
 
 func (sp *Params) PopulateTradeMethodParams(method SwapMethod, recipient, tokenIn, tokenOut common.Address, amtIn, amtOut *big.Int) error {
-	log.Println("==============", method)
+	if sp.Method < 1 {
+		sp.Method = method
+	}
 	cSwapToken, cRxToken, cSwapAmount, cRxAmount := sp.SwapToken, sp.RxToken, new(big.Int).Set(sp.SwapAmount), new(big.Int).Set(sp.RxAmount)
 	sp.Recipient = InputRecipient(recipient, sp.Sender)
 	if !helper.IsSet(sp.SwapToken) {

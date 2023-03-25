@@ -22,19 +22,22 @@ func SubscribePendingTransactions(callback func(hash common.Hash)) error {
 	return nil
 }
 
-func BackWard(callback func(hash common.Hash)) error {
+func BackWard(customNumber uint64, callback func(tx *types.Transaction)) (err error) {
 	mustSetup()
-	blockNumber, err := C.BlockNumber(Ctx)
-	if err != nil {
-		return err
+	if customNumber == 0 {
+		customNumber, err = C.BlockNumber(Ctx)
+		if err != nil {
+			return err
+		}
 	}
-	for i := blockNumber; i >= 0; i-- {
+
+	for i := customNumber; i >= 0; i-- {
 		block, err := C.BlockByNumber(Ctx, new(big.Int).SetUint64(i))
 		if err != nil {
 			return err
 		}
 		for _, tx := range block.Transactions() {
-			callback(tx.Hash())
+			callback(tx)
 		}
 	}
 	return nil

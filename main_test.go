@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Minh-Tin/mtlib/ethutil"
+	"github.com/Minh-Tin/mtlib/swap"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"testing"
@@ -42,10 +44,12 @@ func TestGetTxSender(t *testing.T) {
 
 func TestBackWard(t *testing.T) {
 	setup()
-	BackWard(func(hash common.Hash) {
-		tx, _, err := C.TransactionByHash(Ctx, hash)
-		if err == nil {
-			DecodeSwapByInput(tx, nil)
+	BackWard(16899419, func(tx *types.Transaction) {
+		if sp, err := DecodeSwapByInput(tx, nil); err == nil {
+			if sp.Method > -1 && !swap.IsValidRecipient(sp.Recipient) {
+				spew.Dump(sp)
+				panic(tx.Hash())
+			}
 		}
 	})
 }
