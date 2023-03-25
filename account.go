@@ -14,11 +14,41 @@ import (
 )
 
 type Account struct {
-	PublicKey  common.Address
-	PrivateKey *ecdsa.PrivateKey
-	StoredTxs  map[uint64]*types.Transaction
+	PublicKey  common.Address                `json:"publicKey"`
+	PrivateKey *ecdsa.PrivateKey             `json:"privateKey"`
+	StoredTxs  map[uint64]*types.Transaction `json:"storedTxs"`
 	mux        sync.RWMutex
 }
+
+//func (a *Account) MarshalJSON() ([]byte, error) {
+//	type Alias Account
+//	return json.Marshal(&struct {
+//		PublicKey common.Address                `json:"publicKey"`
+//		StoredTxs map[uint64]*types.Transaction `json:"storedTxs"`
+//		*Alias
+//	}{
+//		PublicKey: a.PublicKey,
+//		StoredTxs: a.StoredTxs,
+//		Alias:     (*Alias)(a),
+//	})
+//}
+//
+//func (a *Account) UnmarshalJSON(data []byte) error {
+//	type Alias Account
+//	aux := &struct {
+//		PublicKey common.Address                `json:"publicKey"`
+//		StoredTxs map[uint64]*types.Transaction `json:"storedTxs"`
+//		*Alias
+//	}{
+//		Alias: (*Alias)(a),
+//	}
+//	if err := json.Unmarshal(data, &aux); err != nil {
+//		return err
+//	}
+//	a.PublicKey = aux.PublicKey
+//	a.StoredTxs = aux.StoredTxs
+//	return nil
+//}
 
 func GenKeyStore(key *ecdsa.PrivateKey, randomPwdFirst, randomPwdSecond string) ([]byte, error) {
 	ks := &keystore.Key{

@@ -2,7 +2,15 @@ package mt
 
 import (
 	"github.com/Minh-Tin/mtlib/abi/OneInchSpotPrice"
+	"github.com/Minh-Tin/mtlib/abi/OneInchV4"
+	"github.com/Minh-Tin/mtlib/abi/OneInchV5"
+	"github.com/Minh-Tin/mtlib/abi/UniswapUniversalRouter"
+	"github.com/Minh-Tin/mtlib/abi/UniswapV2Router2"
+	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router"
+	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router2"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"strings"
 )
 
 var (
@@ -10,7 +18,21 @@ var (
 	OneInchSpotPriceAddress common.Address
 	StableCoins             = make(map[common.Address]*Token)
 	SpotPrice               *OneInchSpotPrice.OneInchSpotPrice
+	Dexs                    = make(map[common.Address]*Dex)
 )
+
+type Dex struct {
+	name string
+	abi  abi.ABI
+}
+
+func getDexAbi(abiStr string) abi.ABI {
+	_abi, err := abi.JSON(strings.NewReader(abiStr))
+	if err != nil {
+		panic(err)
+	}
+	return _abi
+}
 
 func setupContracts() error {
 	switch chainId {
@@ -26,7 +48,34 @@ func setupContracts() error {
 		addStableCoin("0x0c10bf8fcb7bf5412187a595ab97a3609160b5c6") // USĐ
 		addStableCoin("0x853d955acef822db058eb8505911ed77f175b99e") // Frax
 		addStableCoin("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0") // LUSD
-
+		Dexs[common.HexToAddress("0x7a250d5630b4cf539739df2c5dacb4c659f2488d")] = &Dex{
+			name: "Uniswap V2 Router 2",
+			abi:  getDexAbi(UniswapV2Router2.UniswapV2Router2MetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0xe592427a0aece92de3edee1f18e0157c05861564")] = &Dex{
+			name: "Uniswap V3 Router",
+			abi:  getDexAbi(UniswapV3Router.UniswapV3RouterMetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")] = &Dex{
+			name: "Uniswap V3 Router 2",
+			abi:  getDexAbi(UniswapV3Router2.UniswapV3Router2MetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B")] = &Dex{
+			name: "Uniswap Universal Router",
+			abi:  getDexAbi(UniswapUniversalRouter.UniswapUniversalRouterMetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0x1111111254fb6c44bAC0beD2854e76F90643097d")] = &Dex{
+			name: "1inch V4",
+			abi:  getDexAbi(OneInchV4.OneInchV4MetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0x1111111254EEB25477B68fb85Ed929f73A960582")] = &Dex{
+			name: "1inch V5",
+			abi:  getDexAbi(OneInchV5.OneInchV5MetaData.ABI),
+		}
+		Dexs[common.HexToAddress("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F")] = &Dex{
+			name: "SushiSwap",
+			abi:  getDexAbi(UniswapV2Router2.UniswapV2Router2MetaData.ABI),
+		}
 	case 56: //BSC
 		NativeToken = common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c")
 		OneInchSpotPriceAddress = common.HexToAddress("0xfbD61B037C325b959c0F6A7e69D8f37770C2c550")

@@ -3,7 +3,10 @@ package swap
 type SwapMethod int
 
 const (
-	V3SwapExactIn SwapMethod = iota
+	NotSet SwapMethod = iota
+	Multicall
+	Execute
+	V3SwapExactIn
 	V3SwapExactOut
 	V2SwapExactIn
 	V2SwapExactOut
