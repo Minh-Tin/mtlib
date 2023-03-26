@@ -14,6 +14,23 @@ var (
 	addrThis      = common.BigToAddress(big.NewInt(2)) // the router
 )
 
+type SwapCall struct {
+	Method SwapMethod
+	Path   []common.Address
+}
+
+func (s *SwapCall) AddPath(path []common.Address) {
+	for _, p := range path {
+		if len(s.Path) == 0 {
+			s.Path = append(s.Path, p)
+		} else {
+			if !helper.IsTheSame(p, s.Path[len(s.Path)-1]) {
+				s.Path = append(s.Path, p)
+			}
+		}
+	}
+}
+
 type Params struct {
 	Tx         *types.Transaction
 	Sender     common.Address
@@ -23,10 +40,7 @@ type Params struct {
 	SwapAmount *big.Int // AmountIn / AmountInMax
 	RxAmount   *big.Int // AmountOut / AmountOutMin
 	Method     SwapMethod
-	Calls      []struct {
-		Method SwapMethod
-		Path   []common.Address
-	}
+	Calls      []*SwapCall
 }
 
 func (sp *Params) PopulateTradeMethodParams(method SwapMethod, recipient, tokenIn, tokenOut common.Address, amtIn, amtOut *big.Int) error {

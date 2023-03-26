@@ -51,7 +51,6 @@ func DecodeSwapByInput(tx *types.Transaction, callback swap.CallBack) (*swap.Par
 		return nil, errors.Errorf("Not valid transaction")
 	}
 	if dex, ok := Dexs[*tx.To()]; ok {
-		fmt.Println(tx.Hash().Hex())
 		sender, err := ethutil.GetTxSender(tx)
 		if err != nil {
 			return nil, err
@@ -140,6 +139,17 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 					input["amountIn"].(*big.Int), input["amountOutMin"].(*big.Int)); err != nil {
 					return err
 				}
+				swapCall := &swap.SwapCall{
+					Method: swap.V3SwapExactIn,
+				}
+				var path []common.Address
+				for _, h := range hops {
+					path = append(path, h.In)
+					path = append(path, h.Out)
+				}
+				swapCall.AddPath(path)
+				sp.Calls = append(sp.Calls, swapCall)
+
 			case 0x01: //V3_SWAP_EXACT_OUT
 				pRaw := iMulti[idx]
 				res, err := abi.Decode(UniswapUniversalRouter.V3_SWAP_EXACT_OUT, pRaw)
@@ -163,6 +173,16 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 					input["amountInMax"].(*big.Int), input["amountOut"].(*big.Int)); err != nil {
 					return err
 				}
+				swapCall := &swap.SwapCall{
+					Method: swap.V3SwapExactOut,
+				}
+				var path []common.Address
+				for _, h := range hops {
+					path = append(path, h.In)
+					path = append(path, h.Out)
+				}
+				swapCall.AddPath(path)
+				sp.Calls = append(sp.Calls, swapCall)
 			case 0x08: //V2_SWAP_EXACT_IN
 				pRaw := iMulti[idx]
 				res, err := abi.Decode(UniswapUniversalRouter.V2_SWAP_EXACT_IN, pRaw)
@@ -181,6 +201,15 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 					input["amountIn"].(*big.Int), input["amountOutMin"].(*big.Int)); err != nil {
 					return err
 				}
+				swapCall := &swap.SwapCall{
+					Method: swap.V2SwapExactIn,
+				}
+				var _path []common.Address
+				for _, p := range path {
+					_path = append(_path, common.HexToAddress(p.String()))
+				}
+				swapCall.AddPath(_path)
+				sp.Calls = append(sp.Calls, swapCall)
 			case 0x09: //V2_SWAP_EXACT_OUT
 				pRaw := iMulti[idx]
 				res, err := abi.Decode(UniswapUniversalRouter.V2_SWAP_EXACT_OUT, pRaw)
@@ -198,6 +227,15 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 					input["amountInMax"].(*big.Int), input["amountOut"].(*big.Int)); err != nil {
 					return err
 				}
+				swapCall := &swap.SwapCall{
+					Method: swap.V2SwapExactOut,
+				}
+				var _path []common.Address
+				for _, p := range path {
+					_path = append(_path, common.HexToAddress(p.String()))
+				}
+				swapCall.AddPath(_path)
+				sp.Calls = append(sp.Calls, swapCall)
 			case 0x0c:
 				if swap.IsValidRecipient(sp.Recipient) {
 					break
@@ -216,7 +254,7 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 				pRaw := iMulti[idx]
 				res, err := abi.Decode(UniswapUniversalRouter.SWEEP, pRaw)
 				if err != nil {
-					return errors.Wrap(err, "failed to decode UNWRAP_ETH")
+					return errors.Wrap(err, "failed to decode SWEEP")
 				}
 				input := res.(map[string]interface{})
 				sp.Recipient = swap.InputRecipient(common.HexToAddress(input["recipient"].(ethgo.Address).String()), sp.Sender)
@@ -250,6 +288,12 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			params.AmountIn, params.AmountOutMinimum); err != nil {
 			return err
 		}
+		sp.Calls = append(sp.Calls, &swap.SwapCall{
+			Method: swap.V2SwapExactOut,
+			Path: []common.Address{
+				params.TokenIn, params.TokenOut,
+			},
+		})
 
 	case "exactInput":
 		paramsRaw, ok := iArgs["params"]
@@ -278,7 +322,16 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			params.AmountIn, params.AmountOutMinimum); err != nil {
 			return err
 		}
-
+		swapCall := &swap.SwapCall{
+			Method: swap.ExactInput,
+		}
+		var path []common.Address
+		for _, h := range hops {
+			path = append(path, h.In)
+			path = append(path, h.Out)
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "exactOutputSingle":
 		paramsRaw, ok := iArgs["params"]
 		if !ok || paramsRaw == nil {
@@ -306,6 +359,12 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			return err
 		}
 
+		sp.Calls = append(sp.Calls, &swap.SwapCall{
+			Method: swap.ExactOutputSingle,
+			Path: []common.Address{
+				params.TokenIn, params.TokenOut,
+			},
+		})
 	case "exactOutput":
 		paramsRaw, ok := iArgs["params"]
 		if !ok || paramsRaw == nil {
@@ -334,6 +393,16 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			return err
 		}
 
+		swapCall := &swap.SwapCall{
+			Method: swap.ExactOutput,
+		}
+		var path []common.Address
+		for _, h := range hops {
+			path = append(path, h.In)
+			path = append(path, h.Out)
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactTokensForTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -347,6 +416,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountIn"].(*big.Int), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactTokensForTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactTokensForTokensSupportingFeeOnTransferTokens":
 		path := iArgs["path"].([]common.Address)
 		if err = sp.PopulateTradeMethodParams(
@@ -356,6 +430,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountIn"].(*big.Int), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactTokensForTokensSupportingFeeOnTransferTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactTokensForETHSupportingFeeOnTransferTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -368,6 +447,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountIn"].(*big.Int), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactTokensForETHSupportingFeeOnTransferTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactTokensForETH":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -380,6 +464,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountIn"].(*big.Int), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactTokensForETH,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapTokensForExactETH":
 		path := iArgs["path"].([]common.Address)
 
@@ -390,6 +479,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountInMax"].(*big.Int), iArgs["amountOut"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapTokensForExactETH,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapTokensForExactTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -402,6 +496,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amountInMax"].(*big.Int), iArgs["amountOut"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapTokensForExactTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactETHForTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -414,6 +513,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			tx.Value(), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactETHForTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapETHForExactTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -426,6 +530,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			tx.Value(), iArgs["amountOut"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapETHForExactTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "swapExactETHForTokensSupportingFeeOnTransferTokens":
 		path := iArgs["path"].([]common.Address)
 		if len(path) < 2 {
@@ -439,6 +548,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			tx.Value(), iArgs["amountOutMin"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.SwapExactETHForTokensSupportingFeeOnTransferTokens,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "refundETH", "selfPermit", "selfPermitAllowed", "pull", "mint":
 	case "sweepTokenWithFee", "sweepTokenWithFee0":
 		if !swap.IsValidRecipient(sp.Recipient) {
@@ -476,6 +590,10 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			desc.Amount, desc.MinReturnAmount); err != nil {
 			return err
 		}
+		sp.Calls = append(sp.Calls, &swap.SwapCall{
+			Method: swap.OneInchSwap,
+			Path:   []common.Address{desc.SrcToken, desc.DstToken},
+		})
 	case "unoswap":
 		switch pools := iArgs["pools"].(type) {
 		default:
@@ -490,6 +608,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 				iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 				return err
 			}
+			swapCall := &swap.SwapCall{
+				Method: swap.OneInchUnoSwap,
+			}
+			swapCall.AddPath(path)
+			sp.Calls = append(sp.Calls, swapCall)
 		}
 	case "unoswapToWithPermit", "unoswapTo":
 		switch pools := iArgs["pools"].(type) {
@@ -505,6 +628,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 				iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 				return err
 			}
+			swapCall := &swap.SwapCall{
+				Method: swap.OneInchUnoSwapTo,
+			}
+			swapCall.AddPath(path)
+			sp.Calls = append(sp.Calls, swapCall)
 		}
 	case "uniswapV3Swap":
 		pools := iArgs["pools"].([]*big.Int)
@@ -519,6 +647,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.OneInchUniswapV3Swap,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "uniswapV3SwapTo", "uniswapV3SwapToWithPermit":
 		pools := iArgs["pools"].([]*big.Int)
 		path, err := getPoolsInfo(tx, pools)
@@ -532,6 +665,11 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			iArgs["amount"].(*big.Int), iArgs["minReturn"].(*big.Int)); err != nil {
 			return err
 		}
+		swapCall := &swap.SwapCall{
+			Method: swap.OneInchUniswapV3SwapTo,
+		}
+		swapCall.AddPath(path)
+		sp.Calls = append(sp.Calls, swapCall)
 	case "fillOrderRFQCompact":
 		params := OneInchV5.OrderRFQLibOrderRFQ(iArgs["order"].(struct {
 			Info          *big.Int       "json:\"info\""
@@ -549,6 +687,10 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			params.MakingAmount, params.TakingAmount); err != nil {
 			return err
 		}
+		sp.Calls = append(sp.Calls, &swap.SwapCall{
+			Method: swap.OneInchFillOrderRFQCompact,
+			Path:   []common.Address{params.MakerAsset, params.TakerAsset},
+		})
 	case "addLiquidityETH", "addLiquidity", "increaseLiquidity", "increaseLiquidityCurrentRange":
 	case "decreaseLiquidityInHalf", "decreaseLiquidity", "removeLiquidity", "removeLiquidityWithPermit":
 		if callback != nil {

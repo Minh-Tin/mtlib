@@ -76,6 +76,10 @@ func setupContracts() error {
 			name: "SushiSwap",
 			abi:  getDexAbi(UniswapV2Router2.UniswapV2Router2MetaData.ABI),
 		}
+		Dexs[common.HexToAddress("0x03f7724180AA6b939894B5Ca4314783B0b36b329")] = &Dex{
+			name: "ShibaSwap",
+			abi:  getDexAbi(UniswapV2Router2.UniswapV2Router2MetaData.ABI),
+		}
 	case 56: //BSC
 		NativeToken = common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c")
 		OneInchSpotPriceAddress = common.HexToAddress("0xfbD61B037C325b959c0F6A7e69D8f37770C2c550")
