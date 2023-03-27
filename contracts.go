@@ -45,7 +45,7 @@ func setupContracts() error {
 		addStableCoin("0x4Fabb145d64652a948d72533023f6E7A623C7C53") // BUSD
 		addStableCoin("0x0000000000085d4780B73119b644AE5ecd22b376") // TUSD
 		addStableCoin("0x8e870d67f660d95d5be530380d0ec0bd388289e1") // Pax
-		addStableCoin("0x0c10bf8fcb7bf5412187a595ab97a3609160b5c6") // USĐ
+		addStableCoin("0x0c10bf8fcb7bf5412187a595ab97a3609160b5c6") // USDD
 		addStableCoin("0x853d955acef822db058eb8505911ed77f175b99e") // Frax
 		addStableCoin("0x5f98805A4E8be255a32880FDeC7F6728C6568bA0") // LUSD
 		Dexs[common.HexToAddress("0x7a250d5630b4cf539739df2c5dacb4c659f2488d")] = &Dex{

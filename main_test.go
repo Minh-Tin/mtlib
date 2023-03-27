@@ -15,7 +15,7 @@ import (
 )
 
 func setup() {
-	Setup("ws://0xbmc.com:8845")
+	Setup("ws://192.168.1.40:8546")
 }
 
 func TestDecodeSwapByInput(t *testing.T) {
