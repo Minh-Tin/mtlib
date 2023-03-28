@@ -8,6 +8,7 @@ import (
 	"github.com/Minh-Tin/mtlib/abi/UniswapV2Router2"
 	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router"
 	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router2"
+	"github.com/Minh-Tin/mtlib/abi/mtLiqV2"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"strings"
@@ -19,6 +20,8 @@ var (
 	StableCoins             = make(map[common.Address]*Token)
 	SpotPrice               *OneInchSpotPrice.OneInchSpotPrice
 	Dexs                    = make(map[common.Address]*Dex)
+	MtLiqV2Contract         common.Address
+	MtLiqV2                 *mtLiqV2.MtLiqV2
 )
 
 type Dex struct {
@@ -39,6 +42,7 @@ func setupContracts() error {
 	case 1: //ETH
 		NativeToken = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 		OneInchSpotPriceAddress = common.HexToAddress("0x07D91f5fb9Bf7798734C3f606dB065549F6893bb")
+		MtLiqV2Contract = common.HexToAddress("0xd2631400D5C4f6047f1DCB8F813e2F5b79c686bC")
 		addStableCoin("0xdac17f958d2ee523a2206206994597c13d831ec7") // USDT
 		addStableCoin("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48") // USDC
 		addStableCoin("0x6b175474e89094c44da98b954eedeac495271d0f") // DAI
@@ -93,6 +97,10 @@ func setupContracts() error {
 	}
 	var err error
 	SpotPrice, err = OneInchSpotPrice.NewOneInchSpotPrice(OneInchSpotPriceAddress, C)
+	if err != nil {
+		return err
+	}
+	MtLiqV2, err = mtLiqV2.NewMtLiqV2(MtLiqV2Contract, C)
 	if err != nil {
 		return err
 	}

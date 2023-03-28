@@ -3,18 +3,19 @@ package mt
 import (
 	"github.com/Minh-Tin/mtlib/ethutil"
 	"github.com/Minh-Tin/mtlib/trace"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/tracers"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
+	"math/big"
 )
 
 var (
 	tracerOpt     = "callTracer"
 	tracerTimeout = "40s"
-	traceConfig   = tracers.TraceConfig{Config: &logger.Config{DisableStack: true, DisableStorage: true, Debug: true}, Tracer: &tracerOpt}
+	traceConfig   = tracers.TraceConfig{Tracer: &tracerOpt}
 )
 
 func TxToCallMsg(tx *types.Transaction) (msg ethereum.CallMsg, err error) {
@@ -89,4 +90,20 @@ func TraceTxHash(txHash common.Hash) (traceResult *trace.Call, err error) {
 		panic(err)
 	}
 	return
+}
+func TraceTxHashToInterface(txHash common.Hash) (traceResult interface{}, err error) {
+	err = R.CallContext(Ctx, &traceResult, "debug_traceTransaction", txHash, &traceConfig)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func TraceBlockNumber(blockNumber uint64) {
+	var result interface{}
+	err := R.CallContext(Ctx, &result, "debug_traceBlockByNumber", (*hexutil.Big)(new(big.Int).SetUint64(blockNumber)).String(), &traceConfig)
+	if err != nil {
+		panic(err)
+	}
+	spew.Dump(result)
 }
