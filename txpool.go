@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"math/big"
 )
 
 func SubscribePendingTransactions(callback func(hash common.Hash)) error {
@@ -18,27 +17,6 @@ func SubscribePendingTransactions(callback func(hash common.Hash)) error {
 	defer sub.Unsubscribe()
 	for pendingTx := range pendingTxsChan {
 		go callback(pendingTx)
-	}
-	return nil
-}
-
-func BackWard(customNumber uint64, callback func(tx *types.Transaction)) (err error) {
-	mustSetup()
-	if customNumber == 0 {
-		customNumber, err = C.BlockNumber(Ctx)
-		if err != nil {
-			return err
-		}
-	}
-
-	for i := customNumber; i >= 0; i-- {
-		block, err := C.BlockByNumber(Ctx, new(big.Int).SetUint64(i))
-		if err != nil {
-			return err
-		}
-		for _, tx := range block.Transactions() {
-			callback(tx)
-		}
 	}
 	return nil
 }

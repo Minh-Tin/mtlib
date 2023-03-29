@@ -9,6 +9,7 @@ import (
 	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router"
 	"github.com/Minh-Tin/mtlib/abi/UniswapV3Router2"
 	"github.com/Minh-Tin/mtlib/abi/mtLiqV2"
+	"github.com/Minh-Tin/mtlib/helper"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"strings"
@@ -96,13 +97,17 @@ func setupContracts() error {
 		addStableCoin("0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3") //DAI
 	}
 	var err error
-	SpotPrice, err = OneInchSpotPrice.NewOneInchSpotPrice(OneInchSpotPriceAddress, C)
-	if err != nil {
-		return err
+	if helper.IsSet(OneInchSpotPriceAddress) {
+		SpotPrice, err = OneInchSpotPrice.NewOneInchSpotPrice(OneInchSpotPriceAddress, C)
+		if err != nil {
+			return err
+		}
 	}
-	MtLiqV2, err = mtLiqV2.NewMtLiqV2(MtLiqV2Contract, C)
-	if err != nil {
-		return err
+	if helper.IsSet(MtLiqV2Contract) {
+		MtLiqV2, err = mtLiqV2.NewMtLiqV2(MtLiqV2Contract, C)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

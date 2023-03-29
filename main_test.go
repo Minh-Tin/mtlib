@@ -15,7 +15,7 @@ import (
 )
 
 func setup() {
-	Setup("ws://192.168.1.40:8546")
+	Setup("ws://192.168.1.51:8548")
 }
 
 func TestDecodeSwapByInput(t *testing.T) {
@@ -37,7 +37,10 @@ func TestKeyStore(t *testing.T) {
 
 func TestGetTxSender(t *testing.T) {
 	setup()
-	tx, _, _ := C.TransactionByHash(Ctx, common.HexToHash("0x17badf61ba431c4d42148528359a906e68bab0fa17e9eb104e3332779c397398"))
+	tx, _, err := C.TransactionByHash(Ctx, common.HexToHash("0x5efabf6537b9661ddb380b871e0eb21d7dcd327c83b01f970b6f0bafe57e2ff4"))
+	if err != nil {
+		panic(err)
+	}
 	spew.Dump(ethutil.GetTxSender(tx))
 }
 
