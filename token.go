@@ -6,6 +6,7 @@ import (
 	"github.com/Minh-Tin/mtlib/abi/ERC20"
 	"github.com/Minh-Tin/mtlib/abi/Erc20Bytes32"
 	"github.com/Minh-Tin/mtlib/helper"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 )
@@ -81,12 +82,20 @@ func (t *Token) getInstance() (*ERC20.ERC20, error) {
 	return t.instance, err
 }
 
-func (t *Token) GetRateToEth() (*big.Int, error) {
-	return SpotPrice.GetRateToEth(nil, t.Address, false)
+func (t *Token) GetRateToEth(blockNumber *big.Int) (*big.Int, error) {
+	var opts *bind.CallOpts
+	if blockNumber != nil {
+		opts = &bind.CallOpts{BlockNumber: blockNumber}
+	}
+	return SpotPrice.GetRateToEth(opts, t.Address, false)
 }
 
-func (t *Token) GetRate(quote common.Address) (*big.Int, error) {
-	return SpotPrice.GetRate(nil, t.Address, quote, false)
+func (t *Token) GetRate(quote common.Address, blockNumber *big.Int) (*big.Int, error) {
+	var opts *bind.CallOpts
+	if blockNumber != nil {
+		opts = &bind.CallOpts{BlockNumber: blockNumber}
+	}
+	return SpotPrice.GetRate(opts, t.Address, quote, false)
 }
 
 func (t *Token) IsStableCoin() bool {

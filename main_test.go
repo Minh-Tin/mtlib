@@ -4,24 +4,25 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/Minh-Tin/mtlib/ethutil"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"log"
-	"testing"
 )
 
 func setup() {
-	Setup("ws://192.168.1.51:8548")
+	Setup("ws://192.168.1.51:8546")
 }
 
 func TestDecodeSwapByInput(t *testing.T) {
 	setup()
 	//tx, _, _ := C.TransactionByHash(Ctx, common.HexToHash("0x418fcb716d3d502e389e9b21672bda26029bdd3e3b740df4cd917515509d8346"))
-	tx, _, _ := C.TransactionByHash(Ctx, common.HexToHash("0xf0a71db6f3cb9d6b234853d9605a13e28ced7b55a81ffb6083c52d966e94055e"))
+	tx, _, _ := C.TransactionByHash(Ctx, common.HexToHash("0xbfa06579137c6da2581c285aca0d43cded322105f379d048459b6588167fcc8b"))
 	spew.Dump(DecodeSwapByInput(tx, nil))
 }
 
@@ -37,7 +38,7 @@ func TestKeyStore(t *testing.T) {
 
 func TestGetTxSender(t *testing.T) {
 	setup()
-	tx, _, err := C.TransactionByHash(Ctx, common.HexToHash("0x5efabf6537b9661ddb380b871e0eb21d7dcd327c83b01f970b6f0bafe57e2ff4"))
+	tx, _, err := C.TransactionByHash(Ctx, common.HexToHash("0xbfa06579137c6da2581c285aca0d43cded322105f379d048459b6588167fcc8b"))
 	if err != nil {
 		panic(err)
 	}
@@ -46,13 +47,15 @@ func TestGetTxSender(t *testing.T) {
 
 func TestBackWard(t *testing.T) {
 	setup()
-	BackWard(0, func(tx *types.Transaction) {
+	if err := BackWard(0, func(tx *types.Transaction) {
 		if sp, err := DecodeSwapByInput(tx, nil); err == nil {
 			if sp.Method > -1 && len(sp.Calls) == 0 {
 				panic(tx.Hash().Hex())
 			}
 		}
-	})
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func TestAccount(t *testing.T) {
