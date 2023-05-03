@@ -116,6 +116,10 @@ func decodeSwapByInput(dex *Dex, d []byte, tx *types.Transaction, sp *swap.Param
 			err = errors.Errorf("unable to get '%s' input data 5", method.Name)
 			return err
 		}
+		if len(commands) > len(iMulti) {
+			err = errors.Errorf("len commands > len iMulti, Method '%s', Tx: %s", method.Name, tx.Hash())
+			return err
+		}
 		for idx, command := range commands {
 			switch command {
 			case 0x00: //V3_SWAP_EXACT_IN
